@@ -173,6 +173,7 @@ Prototype entrypoints:
 
 ```bash
 python scripts/pretrain_ae_mae.py
+python scripts/run_exp1.py
 python scripts/run_linear_probe.py
 ```
 
@@ -377,6 +378,7 @@ Prototype 入口：
 
 ```bash
 python scripts/pretrain_ae_mae.py
+python scripts/run_exp1.py
 python scripts/run_linear_probe.py
 ```
 

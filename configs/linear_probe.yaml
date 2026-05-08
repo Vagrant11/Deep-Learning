@@ -10,6 +10,14 @@ probe:
   learning_rate: 0.001
   seed: 42
 
+knn:
+  k: 20
+  train_limit: 10000
+  test_limit: null
+
 checkpoints:
   ae: checkpoints/ae_cifar10.pth
   mae: checkpoints/mae_cifar10.pth
+
+outputs:
+  directory: results/exp1

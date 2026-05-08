@@ -1,9 +1,14 @@
 import random
+import sys
+from pathlib import Path
 
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 
 from src.models import AE, MAE, ae_loss, mae_loss
 
