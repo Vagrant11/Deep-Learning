@@ -177,6 +177,19 @@ python scripts/run_exp1.py
 python scripts/run_linear_probe.py
 ```
 
+Tiny ViT CIFAR-100 pilot entrypoints:
+
+```bash
+python scripts/pretrain_vit_mae_cifar100.py --epochs 20 --batch-size 256 --amp
+python scripts/run_exp1_vit_cifar100.py --epochs 10 --seeds 42 43 44 --knn-k 5 10 20 50 100
+```
+
+On CPU-only machines, use a tiny smoke test only:
+
+```bash
+python scripts/pretrain_vit_mae_cifar100.py --epochs 1 --batch-size 32 --max-train-samples 512
+```
+
 ---
 
 ## 🤝 Collaboration Conventions
@@ -380,6 +393,19 @@ Prototype 入口：
 python scripts/pretrain_ae_mae.py
 python scripts/run_exp1.py
 python scripts/run_linear_probe.py
+```
+
+Tiny ViT CIFAR-100 pilot 入口：
+
+```bash
+python scripts/pretrain_vit_mae_cifar100.py --epochs 20 --batch-size 256 --amp
+python scripts/run_exp1_vit_cifar100.py --epochs 10 --seeds 42 43 44 --knn-k 5 10 20 50 100
+```
+
+只有 CPU 的机器只建议做 smoke test：
+
+```bash
+python scripts/pretrain_vit_mae_cifar100.py --epochs 1 --batch-size 32 --max-train-samples 512
 ```
 
 ---

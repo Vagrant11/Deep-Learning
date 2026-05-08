@@ -1,0 +1,47 @@
+dataset:
+  name: cifar100
+  root: ./data
+  num_classes: 100
+
+model:
+  type: tiny_vit_mae
+  patch_size: 4
+  embed_dim: 128
+  encoder_depth: 4
+  decoder_depth: 2
+  num_heads: 4
+  mae_mask_ratio: 0.75
+
+pretrain:
+  epochs: 20
+  batch_size: 256
+  optimizer: adamw
+  learning_rate: 0.001
+  weight_decay: 0.05
+  seed: 42
+  amp: true
+
+probe:
+  epochs: 10
+  batch_size: 256
+  seeds:
+    - 42
+    - 43
+    - 44
+
+knn:
+  k:
+    - 5
+    - 10
+    - 20
+    - 50
+    - 100
+  train_limit: 10000
+  test_limit: null
+
+checkpoints:
+  ae: checkpoints/ae_tinyvit_cifar100.pth
+  mae: checkpoints/mae_tinyvit_cifar100.pth
+
+outputs:
+  directory: results/exp1_vit_cifar100

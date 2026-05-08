@@ -8,10 +8,18 @@ probe:
   batch_size: 256
   optimizer: adam
   learning_rate: 0.001
-  seed: 42
+  seeds:
+    - 42
+    - 43
+    - 44
 
 knn:
-  k: 20
+  k:
+    - 5
+    - 10
+    - 20
+    - 50
+    - 100
   train_limit: 10000
   test_limit: null
 
