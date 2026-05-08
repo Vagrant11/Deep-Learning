@@ -1,0 +1,18 @@
+dataset:
+  name: cifar10
+  root: ./data
+  num_classes: 10
+
+model:
+  type: conv_ae
+  encoder_feature_dim: 4096
+
+training:
+  epochs: 5
+  batch_size: 128
+  optimizer: adam
+  learning_rate: 0.001
+  seed: 42
+
+checkpoint:
+  path: checkpoints/ae_cifar10.pth

@@ -1,0 +1,15 @@
+dataset:
+  name: cifar10
+  root: ./data
+  num_classes: 10
+
+probe:
+  epochs: 10
+  batch_size: 256
+  optimizer: adam
+  learning_rate: 0.001
+  seed: 42
+
+checkpoints:
+  ae: checkpoints/ae_cifar10.pth
+  mae: checkpoints/mae_cifar10.pth

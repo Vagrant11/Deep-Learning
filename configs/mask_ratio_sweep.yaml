@@ -1,0 +1,9 @@
+mask_ratios:
+  - 0.0
+  - 0.15
+  - 0.30
+  - 0.50
+  - 0.75
+  - 0.90
+
+base_config: configs/mae.yaml
