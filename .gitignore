@@ -5,5 +5,6 @@ __pycache__/
 
 # Local experiment artifacts that are too large for regular Git commits.
 checkpoints/*_tinyvit_cifar100.pth
+checkpoints/exp6_mask_ratio_vit_cifar100/
 data/cifar-100-python/
 data/cifar-100-python.tar.gz
