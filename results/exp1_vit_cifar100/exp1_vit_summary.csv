@@ -1,0 +1,3 @@
+model,linear_probe_mean,linear_probe_std,linear_probe_seeds,best_knn_k,best_knn_acc
+AE,0.05736666666666667,0.001266227994214838,3,50,0.0551
+MAE,0.08853333333333334,0.0033501243758005937,3,100,0.0573

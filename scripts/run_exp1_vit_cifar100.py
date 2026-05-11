@@ -72,7 +72,7 @@ def build_loaders(batch_size, num_workers, max_train_samples, max_test_samples, 
 
 
 def load_reconstructor(path, device):
-    ckpt = torch.load(path, map_location=device)
+    ckpt = torch.load(path, map_location=device, weights_only=False)
     ckpt_args = ckpt["args"]
     model = TinyViTReconstructor(
         patch_size=ckpt_args["patch_size"],

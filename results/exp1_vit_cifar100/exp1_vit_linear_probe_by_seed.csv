@@ -1,0 +1,7 @@
+model,seed,linear_probe_acc
+AE,42,0.0569
+AE,43,0.0564
+AE,44,0.0588
+MAE,42,0.0892
+MAE,43,0.0849
+MAE,44,0.0915

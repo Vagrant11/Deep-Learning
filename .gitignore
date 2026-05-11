@@ -2,3 +2,8 @@ __pycache__/
 *.pyc
 .DS_Store
 *.log
+
+# Local experiment artifacts that are too large for regular Git commits.
+checkpoints/*_tinyvit_cifar100.pth
+data/cifar-100-python/
+data/cifar-100-python.tar.gz
