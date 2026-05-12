@@ -1,0 +1,7 @@
+mask_ratio,linear_probe_mean,linear_probe_std,linear_probe_seeds,checkpoint,final_pretrain_loss
+0.0,0.05736666666666667,0.001266227994214838,3,checkpoints\exp6_mask_ratio_vit_cifar100\tinyvit_mask_ratio_000.pth,0.00039465504670836395
+0.15,0.07273333333333333,0.0027428695436227594,3,checkpoints\exp6_mask_ratio_vit_cifar100\tinyvit_mask_ratio_015.pth,0.012268632208472309
+0.3,0.0706,0.0013114877048603954,3,checkpoints\exp6_mask_ratio_vit_cifar100\tinyvit_mask_ratio_030.pth,0.01741565662265128
+0.5,0.07593333333333334,0.0013316656236958743,3,checkpoints\exp6_mask_ratio_vit_cifar100\tinyvit_mask_ratio_050.pth,0.020860650510128056
+0.75,0.06333333333333334,0.0004509249752822885,3,checkpoints\exp6_mask_ratio_vit_cifar100\tinyvit_mask_ratio_075.pth,0.03045360610953399
+0.9,0.06063333333333334,0.002983845393671284,3,checkpoints\exp6_mask_ratio_vit_cifar100\tinyvit_mask_ratio_090.pth,0.043200774536449084
