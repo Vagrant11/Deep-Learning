@@ -1,0 +1,3 @@
+mask_ratio,linear_probe_mean,linear_probe_std,linear_probe_seeds,checkpoint,final_pretrain_loss
+0.0,0.0,0.0,1,checkpoints\exp6_smoke\tinyvit_mask_ratio_000.pth,
+0.75,0.0078125,0.0,1,checkpoints\exp6_smoke\tinyvit_mask_ratio_075.pth,

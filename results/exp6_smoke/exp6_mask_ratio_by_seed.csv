@@ -1,0 +1,3 @@
+mask_ratio,seed,linear_probe_acc
+0.0,42,0.0
+0.75,42,0.0078125

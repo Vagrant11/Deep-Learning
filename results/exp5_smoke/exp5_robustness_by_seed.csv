@@ -1,0 +1,9 @@
+model,seed,perturbation,accuracy,absolute_drop,relative_drop
+AE,42,clean,0.015625,0.0,0.0
+AE,42,high_pass,0.0078125,0.0078125,0.5
+AE,42,patch_shuffle,0.015625,0.0,0.0
+AE,42,patch_drop,0.0078125,0.0078125,0.5
+MAE,42,clean,0.0078125,0.0,0.0
+MAE,42,high_pass,0.0,0.0078125,1.0
+MAE,42,patch_shuffle,0.0078125,0.0,0.0
+MAE,42,patch_drop,0.0,0.0078125,1.0
