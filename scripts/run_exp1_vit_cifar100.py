@@ -170,6 +170,7 @@ def parse_args():
     parser.add_argument("--knn-k", type=int, nargs="+", default=[5, 10, 20, 50, 100])
     parser.add_argument("--knn-train-limit", type=int, default=10000)
     parser.add_argument("--knn-test-limit", type=int, default=None)
+    parser.add_argument("--skip-knn", action="store_true")
     parser.add_argument("--max-train-samples", type=int, default=None)
     parser.add_argument("--max-test-samples", type=int, default=None)
     parser.add_argument("--output-dir", type=Path, default=Path("results/exp1_vit_cifar100"))
@@ -216,42 +217,45 @@ def main():
             seed_rows.append({"model": name, "seed": seed, "linear_probe_acc": linear_acc})
             histories[name][str(seed)] = history
 
-        knn_train_loader, knn_test_loader = build_loaders(
-            args.batch_size,
-            args.num_workers,
-            args.max_train_samples,
-            args.max_test_samples,
-            args.seeds[0],
-        )
-        knn_rows.extend(
-            run_knn(
-                name,
-                encoder,
-                knn_train_loader,
-                knn_test_loader,
-                device,
-                args.knn_k,
-                args.knn_train_limit,
-                args.knn_test_limit,
+        if not args.skip_knn:
+            knn_train_loader, knn_test_loader = build_loaders(
+                args.batch_size,
+                args.num_workers,
+                args.max_train_samples,
+                args.max_test_samples,
+                args.seeds[0],
             )
-        )
+            knn_rows.extend(
+                run_knn(
+                    name,
+                    encoder,
+                    knn_train_loader,
+                    knn_test_loader,
+                    device,
+                    args.knn_k,
+                    args.knn_train_limit,
+                    args.knn_test_limit,
+                )
+            )
 
     summary_rows = []
     for name in encoders:
         linear_values = [row["linear_probe_acc"] for row in seed_rows if row["model"] == name]
         linear_mean, linear_std = mean_std(linear_values)
-        model_knn_rows = [row for row in knn_rows if row["model"] == name]
-        best_knn = max(model_knn_rows, key=lambda row: row["knn_acc"])
-        summary_rows.append(
-            {
-                "model": name,
-                "linear_probe_mean": linear_mean,
-                "linear_probe_std": linear_std,
-                "linear_probe_seeds": len(args.seeds),
-                "best_knn_k": best_knn["k"],
-                "best_knn_acc": best_knn["knn_acc"],
-            }
-        )
+        summary = {
+            "model": name,
+            "linear_probe_mean": linear_mean,
+            "linear_probe_std": linear_std,
+            "linear_probe_seeds": len(args.seeds),
+            "best_knn_k": "",
+            "best_knn_acc": "",
+        }
+        if not args.skip_knn:
+            model_knn_rows = [row for row in knn_rows if row["model"] == name]
+            best_knn = max(model_knn_rows, key=lambda row: row["knn_acc"])
+            summary["best_knn_k"] = best_knn["k"]
+            summary["best_knn_acc"] = best_knn["knn_acc"]
+        summary_rows.append(summary)
 
     save_results(summary_rows, seed_rows, knn_rows, histories, args.output_dir)
 
