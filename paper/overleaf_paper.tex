@@ -20,7 +20,7 @@
 \maketitle
 
 \begin{abstract}
-Masked autoencoders (MAEs) have become a strong self-supervised learning approach, but it remains unclear why masking improves learned visual representations compared with standard autoencoding. This paper studies the hypothesis that masking prevents the encoder from solving reconstruction through local pixel-copying shortcuts and instead encourages features that are more useful for downstream recognition. We compare standard autoencoders (AEs) and MAEs under a controlled tiny Vision Transformer setting on CIFAR-100, keeping the architecture, dataset, optimizer, and evaluation protocol fixed while changing the reconstruction objective. The results show that MAE features achieve higher downstream accuracy despite worse pixel-level reconstruction quality. Mechanism analyses covering attention distance, shape-texture bias, and robustness to input perturbations suggest that the advantage is not explained by uniformly larger attention distance, but by patch-level contextual relations encouraged by masking. A mask-ratio ablation further reveals an inverted-U relationship, with moderate masking producing the best representation quality. These findings support the view that masking is a useful inductive bias for representation learning, but its benefits depend on the reconstruction task remaining both difficult and informative.
+Masked autoencoders (MAEs) have become a strong self-supervised learning approach, but it remains unclear why masking improves learned visual representations compared with standard autoencoding. This paper studies the hypothesis that masking prevents the encoder from solving reconstruction through local pixel-copying shortcuts and instead encourages features that are more useful for downstream recognition. We compare standard autoencoders (AEs) and MAEs under a controlled tiny Vision Transformer setting on CIFAR-100, keeping the architecture, dataset, optimizer, and evaluation protocol fixed while changing the reconstruction objective. The results show that MAE features achieve higher downstream accuracy despite worse pixel-level reconstruction quality. Mechanism analyses covering attention distance, shape-texture bias, and robustness to input perturbations suggest that the advantage is not explained by uniformly larger attention distance or by a shift in shape preference, but rather by patch-level contextual relations encouraged by masking. A mask-ratio ablation further reveals an inverted-U relationship, with moderate masking producing the best representation quality. These findings support the view that masking is a useful inductive bias for representation learning, but its benefits depend on the reconstruction task remaining both difficult and informative.
 \end{abstract}
 
 \section{Introduction}
@@ -36,7 +36,7 @@ The main contributions are:
     \item We show that MAE improves linear-probe accuracy over an AE baseline under the same tiny ViT architecture.
     \item We demonstrate a clear decoupling between reconstruction quality and representation quality: AE reconstructs pixels much better, while MAE learns stronger features.
     \item We analyze possible mechanisms using attention distance, effective receptive field, Fourier cue-conflict images, and input perturbations.
-    \item We propose a unified mechanism interpretation based on patch-level contextual relations, reconciling the mixed evidence from attention, shape bias, and robustness experiments.
+    \item We propose a unified mechanism interpretation based on patch-level contextual relations, which explains the positive evidence from attention and patch-organization experiments while accounting for the null result on shape bias.
     \item We provide a mask-ratio ablation showing that moderate masking performs best, supporting masking as a causal control variable.
 \end{itemize}
 
@@ -92,7 +92,7 @@ All experiments use CIFAR-100, which contains 60,000 color images from 100 class
 
 Representation quality is measured primarily with linear probing. After pre-training, encoder weights are frozen and a linear classifier is trained on top of the learned features. We report the mean and standard deviation over three random seeds: 42, 43, and 44. We also evaluate k-nearest-neighbor classification in the frozen feature space.
 
-During pre-training, the training images use random cropping with padding and random horizontal flipping. Test-time evaluation uses only tensor conversion, without data augmentation. Reconstruction models are trained with AdamW, learning rate $10^{-3}$, weight decay 0.05, batch size 256, and 20 pre-training epochs. Linear probes are trained for 10 epochs with AdamW on the classifier parameters only, using learning rate $10^{-3}$ and no weight decay.
+During pre-training, the training images use random cropping with padding and random horizontal flipping. Test-time evaluation uses only tensor conversion, without data augmentation. Reconstruction models are trained with AdamW, learning rate $10^{-3}$, weight decay 0.05, and batch size 256. Experiments 1--5 use a 100-epoch AE--MAE pre-training run, while Experiment 6 uses the matched 20-epoch mask-ratio ablation setup. Linear probes are trained for 10 epochs with AdamW on the classifier parameters only, using learning rate $10^{-3}$ and no weight decay.
 
 \begin{table}[t]
 \centering
@@ -110,7 +110,7 @@ Embedding dimension & 128 \\
 Encoder depth & 4 Transformer layers \\
 Decoder depth & 2 Transformer layers \\
 Attention heads & 4 \\
-Pre-training epochs & 20 \\
+Pre-training epochs & 100 for Exp. 1--5; 20 for Exp. 6 \\
 Probe epochs & 10 \\
 Batch size & 256 \\
 Optimizer & AdamW \\
@@ -158,15 +158,15 @@ The first experiment tests whether masked reconstruction produces more useful re
 \toprule
 Model & Linear Acc. & Std. & Best k-NN & Best $k$ \\
 \midrule
-AE  & 5.74 & 0.13 & 5.51 & 50 \\
-MAE & 8.85 & 0.34 & 5.73 & 100 \\
+AE  & 6.26 & 0.11 & 4.97 & 100 \\
+MAE & 11.43 & 0.46 & 7.34 & 100 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-MAE improves linear-probe accuracy from 5.74\% to 8.85\%, a gain of 3.12 percentage points and a relative improvement of about 54.3\%. The k-NN improvement is smaller, increasing from 5.51\% to 5.73\%. This suggests that masking improves the global linear separability of the learned features more strongly than it improves local nearest-neighbor structure. One possible explanation is that the feature space is anisotropic: a trained linear classifier can learn class-separating directions, while k-NN relies on a fixed distance metric and is more sensitive to feature scaling and local cluster geometry.
+MAE improves linear-probe accuracy from 6.26\% to 11.43\%, a gain of 5.17 percentage points and a relative improvement of about 82.6\%. The k-NN accuracy also improves from 4.97\% to 7.34\%. The gain is therefore visible under both a trained linear classifier and a non-parametric nearest-neighbor evaluation, although the linear-probe improvement remains larger in absolute magnitude. This suggests that masking improves the class structure of the learned feature space, especially its global linear separability.
 
-The absolute accuracies are low because the experiment intentionally uses a small ViT and short pre-training schedule on CIFAR-100. The important comparison is therefore the matched relative difference between objectives. Both encoders have the same capacity and evaluation protocol, so the improvement indicates that the masked reconstruction objective changes the usefulness of the learned feature space.
+The absolute accuracies are low because the experiment intentionally uses a small ViT on CIFAR-100. The important comparison is therefore the matched relative difference between objectives. Both encoders have the same capacity and evaluation protocol, so the improvement indicates that the masked reconstruction objective changes the usefulness of the learned feature space.
 
 \subsection{Experiment 2: Reconstruction vs. Representation}
 
@@ -180,13 +180,13 @@ The second experiment asks whether better representations are simply caused by b
 \toprule
 Model & MSE & PSNR & Linear Acc. \\
 \midrule
-AE  & 0.000195 & 37.09 & 5.74 \\
-MAE & 0.059671 & 12.24 & 8.85 \\
+AE  & 0.000116 & 39.34 & 6.26 \\
+MAE & 0.039253 & 14.06 & 11.43 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-AE achieves much better pixel-level reconstruction quality, with lower MSE and higher PSNR. However, MAE achieves substantially higher linear-probe accuracy. This result directly shows that pixel-level reconstruction fidelity is not a sufficient measure of representation quality. The AE can reconstruct pixels accurately while learning weaker semantic features, whereas the MAE learns more useful features despite worse reconstruction.
+AE achieves much better pixel-level reconstruction quality, with MSE 0.000116 and PSNR 39.34 dB, compared with MAE's MSE of 0.039253 and PSNR of 14.06 dB. However, MAE achieves substantially higher linear-probe accuracy, 11.43\% compared with 6.26\% for AE. This result directly shows that pixel-level reconstruction fidelity is not a sufficient measure of representation quality. The AE can reconstruct pixels accurately while learning weaker semantic features, whereas the MAE learns more useful features despite worse reconstruction.
 
 This is the central counter-intuitive result of the paper. If reconstruction quality were the main driver of transfer, AE should have the better representation. Instead, the opposite occurs. This supports the shortcut hypothesis: full-image reconstruction can be solved using local continuity and color statistics, while masked reconstruction removes some of that direct information and forces the encoder to infer missing patches from context.
 
@@ -204,15 +204,17 @@ During full-image inference, AE has slightly larger mean attention distance than
 \toprule
 Model & L0 & L1 & L2 & L3 \\
 \midrule
-AE  & 4.1301 & 4.1474 & 4.1362 & 4.1423 \\
-MAE & 3.5623 & 3.7915 & 4.1254 & 4.1004 \\
+AE  & 4.2700 & 4.1323 & 4.1293 & 4.1222 \\
+MAE & 3.4100 & 2.1748 & 3.2084 & 3.1972 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The ERF metrics are also similar. AE obtains radius 13.0597 pixels and entropy 0.9790, while MAE obtains radius 13.0221 pixels and entropy 0.9705. These results do not support a broad claim that MAE always attends more globally than AE at inference time.
+The ERF metrics are also similar. AE obtains radius 13.0454 pixels and entropy 0.9763, while MAE obtains radius 12.9534 pixels and entropy 0.9612. These results do not support a broad claim that MAE always attends more globally than AE at inference time.
 
-However, under masked reconstruction, MAE shows more long-range behavior in deeper layers. In layer 2, the overall attention distance is 3.9869 while masked-to-visible attention distance is 4.0943. In layer 3, the overall distance is 4.0224 while masked-to-visible distance is 4.1467. This suggests that masking changes attention most clearly when the model is solving the masked reconstruction task itself, especially in deeper layers.
+Notably, MAE's layer-1 attention distance is markedly smaller than its other layers, indicating a non-monotonic depth pattern that may reflect specialized intermediate processing in masked-reconstruction-trained models. This pattern reinforces the need to distinguish full-image inference behavior from the masked reconstruction condition.
+
+However, under masked reconstruction, MAE shows a different query-specific pattern. In layer 2, masked-to-visible attention distance is 3.2710, compared with visible-to-visible distance 2.5547. In layer 3, masked-to-visible distance is 3.1752, compared with visible-to-visible distance 2.5093. This suggests that masking changes attention most clearly when the model is solving the masked reconstruction task itself, especially in deeper layers.
 
 This negative and partially positive result is important for interpretation. The data does not justify the simple statement that MAE features are always more global. A more accurate explanation is that the masked objective creates a training condition in which non-local visible context becomes useful for reconstructing missing patches. That behavior is clearest in masked-to-visible attention, not necessarily in full-image inference averages.
 
@@ -230,13 +232,13 @@ After training a frozen-encoder linear probe on clean images, we compare the cla
 \toprule
 Model & Clean Acc. & Shape Bias & Texture Bias \\
 \midrule
-AE  & 5.68 & 58.39 & 41.61 \\
-MAE & 8.87 & 60.57 & 39.43 \\
+AE  & 6.37 & 58.72 & 41.28 \\
+MAE & 11.13 & 59.00 & 41.00 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-As shown in Table~\ref{tab:exp4}, MAE has a slightly higher shape-bias rate than AE. Per-seed shape-bias rates are stable: AE obtains 58.08\%, 58.12\%, and 58.96\%, while MAE obtains 60.40\%, 60.60\%, and 60.70\%. The effect is modest, so the safest conclusion is not that MAE has a strong human-like shape bias, but that masking makes features slightly more shape-aligned in this setting.
+As shown in Table~\ref{tab:exp4}, MAE substantially improves clean accuracy, but the shape-bias rate changes only marginally. AE obtains a shape-bias rate of 58.72\%, while MAE obtains 59.00\%. Per-seed shape-bias rates are AE: 58.90\%, 58.06\%, and 59.20\%, and MAE: 59.06\%, 58.96\%, and 58.98\%. This suggests that the representation gain is not primarily explained by a large shift toward shape bias in this Fourier cue-conflict proxy.
 
 \subsection{Experiment 5: Robustness under Perturbations}
 
@@ -250,26 +252,28 @@ The robustness experiment evaluates which visual information each model depends 
 \toprule
 Model & Condition & Acc. & Rel. Drop \\
 \midrule
-AE  & Clean & 5.74 & 0.00 \\
-AE  & High-pass & 1.26 & 78.01 \\
-AE  & Patch shuffle & 5.73 & 0.12 \\
-AE  & Patch drop & 3.88 & 32.46 \\
+AE  & Clean & 6.26 & 0.00 \\
+AE  & High-pass & 1.18 & 81.17 \\
+AE  & Patch shuffle & 6.25 & 0.16 \\
+AE  & Patch drop & 4.41 & 29.49 \\
 \midrule
-MAE & Clean & 8.85 & 0.00 \\
-MAE & High-pass & 1.27 & 85.71 \\
-MAE & Patch shuffle & 6.84 & 22.72 \\
-MAE & Patch drop & 4.09 & 53.84 \\
+MAE & Clean & 11.43 & 0.00 \\
+MAE & High-pass & 2.38 & 79.22 \\
+MAE & Patch shuffle & 7.92 & 30.64 \\
+MAE & Patch drop & 5.24 & 54.20 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The result is not a clean double dissociation. MAE has higher absolute accuracy under clean evaluation, patch shuffle, and patch drop, but its relative degradation from clean accuracy is larger under the patch-based perturbations. High-pass filtering is severe for both models and reduces them to nearly the same accuracy. In particular, the MAE advantage almost disappears under high-pass filtering (1.26\% for AE versus 1.27\% for MAE), suggesting that the additional information learned by MAE still depends strongly on low-frequency or globally coherent image structure. This indicates that MAE learns stronger features overall, but the additional information it captures is partly tied to spatially coherent patch structure.
+The result is not a clean invariance story. MAE achieves higher absolute accuracy under every condition, including clean evaluation and all three perturbations. However, its relative degradation is larger under patch shuffle and patch drop, suggesting that the additional information captured by MAE depends strongly on coherent patch organization. High-pass filtering is severe for both models, but MAE retains a larger absolute advantage than in the shorter pre-training run. This indicates that MAE learns stronger features overall, while the additional information it captures is still partly tied to spatially coherent patch structure.
 
-The robustness results therefore refine the original hypothesis. If MAE simply learned perturbation-invariant features, it should degrade less under all corruptions. Instead, MAE benefits from masking in clean and perturbed absolute accuracy, but it is still sensitive to disruptions of patch organization. This is consistent with the idea that MAE learns useful structure from patch context, not that it becomes insensitive to structure.
+The robustness results therefore refine the original hypothesis. If MAE simply learned perturbation-invariant features, it should degrade less under all corruptions. Instead, MAE achieves higher absolute accuracy across clean and perturbed conditions, but remains sensitive to disruptions of patch organization. This is consistent with the idea that MAE learns useful structure from patch context, not that it becomes insensitive to structure.
 
 \subsection{Experiment 6: Mask-Ratio Ablation}
 
 Finally, we test whether masking itself is a causal factor by varying only the mask ratio during pre-training. We train models with mask ratios of 0\%, 15\%, 30\%, 50\%, 75\%, and 90\%, then evaluate frozen features with linear probing.
+
+This ablation uses the original 20-epoch schedule for tractability, so the 0\% baseline in Table~\ref{tab:exp6} differs from the 100-epoch AE result in Table~\ref{tab:exp1}.
 
 \begin{table}[t]
 \centering
@@ -297,13 +301,13 @@ This ablation is the strongest causal evidence in the study. Because only the ma
 
 The experiments support the central claim that masking improves representation learning by changing the information the encoder must capture. Experiment 1 establishes the basic phenomenon: MAE features are more linearly separable than AE features. Experiment 2 shows that this advantage is not explained by reconstruction fidelity, since AE reconstructs much better but transfers worse.
 
-The mechanism-level results are more nuanced. Attention distance and ERF do not show that MAE is globally more contextual under all conditions. Instead, the strongest attention-distance evidence appears during masked reconstruction, where masked queries attend farther to visible patches in deeper layers. Shape-texture analysis shows a small but consistent shift toward shape-aligned predictions. Robustness results show that MAE has higher absolute perturbed accuracy, while also suffering larger relative drops under patch-based perturbations. Together, these findings suggest that masking does not simply make the encoder universally more global or robust. Rather, it encourages features that are more useful for classification and more dependent on coherent patch structure.
+The mechanism-level results are more nuanced. Attention distance and ERF do not show that MAE is globally more contextual under all conditions. Instead, the strongest attention-distance evidence appears during masked reconstruction, where masked queries attend farther to visible patches than visible patches attend to each other in deeper layers. Shape-texture analysis shows only a marginal change in shape-bias rate, suggesting that the representation gain is not mainly explained by a large shift toward shape preference. Robustness results show that MAE has higher absolute perturbed accuracy, while also suffering larger relative drops under patch-based perturbations. Together, these findings suggest that masking does not simply make the encoder universally more global, more shape-biased, or more robust. Rather, it encourages features that are more useful for classification and more dependent on coherent patch structure.
 
 The mask-ratio ablation strengthens the causal interpretation. Because architecture and evaluation are fixed, the systematic changes in representation quality can be attributed to the masking objective. Moderate masking performs best, while no masking and excessive masking both lead to weaker features.
 
 \subsection{A Unified Mechanism}
 
-The three mechanism experiments can be interpreted through one common picture: MAE encourages patch-level contextual relations. In Experiment 3, this appears as higher masked-to-visible attention distance in deeper layers during masked reconstruction, because missing patches must be predicted from visible context. In Experiment 4, the same contextual pressure is consistent with a small increase in shape bias, since phase/layout information becomes more useful than purely local amplitude statistics. In Experiment 5, the larger relative drop under patch shuffle and patch drop suggests that the additional information learned by MAE depends on coherent patch organization.
+The mechanism experiments converge on one core observation: MAE encourages patch-level contextual relations, while not necessarily changing every classical measure of global structure. In Experiment 3, masked-to-visible attention distance is higher than visible-to-visible attention distance in deeper layers during masked reconstruction, indicating that masked queries recruit non-local visible context when reconstructing missing patches. In Experiment 5, the larger relative drop under patch shuffle and patch drop suggests that the additional information learned by MAE depends on coherent patch organization. Experiment 4, however, shows essentially no shift in shape bias, suggesting that this contextual structure is not the same as a strong human-like shape preference. The representation gain is therefore mediated by patch-context dependencies, but those dependencies need not appear as uniformly larger inference-time attention distance or a large shift along the shape-bias axis.
 
 This unified interpretation is narrower than the original hypothesis that MAE simply learns more global features. The evidence instead supports a more precise mechanism: masking makes local pixel copying less available, so the encoder learns relations among visible patches that are useful for reconstructing missing regions. These relations improve linear separability, but they are not automatically invariant to all perturbations and do not necessarily produce larger full-image attention distance at inference time.
 
@@ -319,7 +323,7 @@ Three takeaways are most important. First, masking is a real control variable: c
 
 \section{Limitations}
 
-This study uses a tiny ViT architecture and CIFAR-100, so absolute accuracies are low compared with large-scale MAE systems. This may raise concern about whether the AE-MAE gap reflects a stable representation-quality difference or a small-model artifact. We mitigate this risk by using matched architecture, optimizer, pre-training schedule, and probing protocol across all comparisons, and by showing a systematic mask-ratio trend in Experiment 6 rather than relying on a single AE-versus-MAE comparison. Nevertheless, verifying the same trend with longer schedules, stronger backbones, or larger datasets remains important future work.
+This study uses a tiny ViT architecture and CIFAR-100, so absolute accuracies are low compared with large-scale MAE systems. This may raise concern about whether the AE-MAE gap reflects a stable representation-quality difference or a small-model artifact. We mitigate this risk by using matched architecture, optimizer, pre-training schedule, and probing protocol across all comparisons, and by verifying the main AE--MAE comparison with a longer 100-epoch run. Nevertheless, extending the full mask-ratio ablation to longer schedules, stronger backbones, or larger datasets remains important future work.
 
 The Fourier cue-conflict experiment is a lightweight proxy rather than a full neural style-transfer benchmark. Similarly, the perturbation tests are designed to reveal relative dependencies between AE and MAE features, not to establish state-of-the-art robustness. Future work should repeat the analysis on larger datasets, stronger backbones, and more realistic cue-conflict benchmarks.
 
